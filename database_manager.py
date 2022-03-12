@@ -1,7 +1,8 @@
 import re
-from typing import Literal
 import string
 import random
+from sys import platform
+import os
 
 if __name__ == '__main__':#importable modules
     print('\nUSE __ENCRYPTOR LIKE:\n\tfrom __encryptor import __encrypt,__decrypt\n\t__encrypt(String, key) -> __encrypted string \
@@ -9,6 +10,17 @@ if __name__ == '__main__':#importable modules
 else:
     ni = string.ascii_letters+string.digits+'._'
     sep,sep2 = '&&','%&'
+
+if platform == 'win32':
+    clear = lambda:os.system('cls')
+
+elif platform in ('linux','linux2') :
+    clear = lambda:os.system('clear')
+
+else:
+    print('You are running the module in a low-tested platform.\n \
+        Please contact develops if some error ocurrs. (https://github.com/hugoocf/txt-database/issues/new)')
+    
 
 
 def __get_m(key):
@@ -26,7 +38,7 @@ def __get_m(key):
     return m%len(ni) if m%len(ni) else 1
 
 
-def __encrypt(key:Literal['len-8 alphanum str'],*text:Literal['Text string'],**dict_text:Literal['Text interable'])->Literal['__Encrypted string']:
+def __encrypt(key,*text,**dict_text):
 
     m = __get_m(key=key)
 
@@ -37,7 +49,7 @@ def __encrypt(key:Literal['len-8 alphanum str'],*text:Literal['Text string'],**d
             "".join([l if not l in ni else ni[(ni.index(l)+x*(x+1)*(2*x+1)//6+m)%len(ni)] for x,l in enumerate(b)]) for a,b in dict_text.items()} 
 
 
-def __decrypt(key:Literal['len-8 alphanum str'],*text:Literal['Text string'],**dict_text:Literal['Text interable'])->Literal['des__encrypted string']:
+def __decrypt(key,*text,**dict_text):
 
     #create special movement
     m = __get_m(key=key)
@@ -82,7 +94,7 @@ def get(filename):#return all data as a dict
 
 
 
-def write(filename,**data:Literal['user:{data as a dict}((for add data to a user use: update))']):#write, just to create database from nothing
+def write(filename,**data):#write, just to create database from nothing
 
     filename = filename if filename.endswith('.txt') else filename+'.txt'
     with open(filename,'a'):pass #evitar notfilefound
@@ -98,7 +110,7 @@ def write(filename,**data:Literal['user:{data as a dict}((for add data to a user
                 update(filename,dk,**da)
 
 
-def update(filename,keyword:Literal['username'],**args:dict):#write but for an existing user
+def update(filename,username,**args:dict):#write but for an existing user
     
     get_dataRegex = re.compile(r'(.*)!!(.*)@@{(.*)}')
     filename = filename if filename.endswith('.txt') else filename+'.txt'
@@ -109,10 +121,10 @@ def update(filename,keyword:Literal['username'],**args:dict):#write but for an e
             if not m:continue
             key = m.group(2)
             d = {__decrypt(key,*m.group(1)):__decrypt(key,**{a.split(sep)[0]:a.split(sep)[1] for a in m.group(3).split(sep2)})}
-            if keyword in d.keys():dt =d
+            if username in d.keys():dt =d
             else: None if ch in lineas else lineas.append(ch) 
     for k,a in args.items():
-        dt[keyword].update({k:a})
+        dt[username].update({k:a})
     with open(filename,'w') as f:
         f.writelines(lineas)
         for dk,da in dt.items():
@@ -124,7 +136,7 @@ def update(filename,keyword:Literal['username'],**args:dict):#write but for an e
         
 def add(filename,user,**args:dict):#add a new user 
     filename = filename if filename.endswith('.txt') else filename+'.txt'
-    if user in get_users(filename):print('User exists yet');return
+    if user in get_users(filename):return
     with open(filename,'a') as f:
         key = args.get('key',__randomkey())
         b=f'!!{key}'
@@ -168,9 +180,9 @@ def delete_data(filename,user,*keys):#delete some data from user keys
             key = da.get('key',__randomkey())
             b=f'!!{key}'
             da=__encrypt(key,**da)
-            f.write('%s%s@@{%s}\n'%(__encrypt(key,*dk),b,sep2.join([sep.join((dak,daa)) for dak,daa in da.items() if dak != 'key'])))
+            f.write('%s%s@@{%s}\n'%(__encrypt(key,*dk),b,sep2.join([sep.join((dak,daa)) for dak,daa in da.items() if dak != key])))
 
 
-def reconfig(filename,toDo:Literal['change all keys']=None)->None:
+def reconfig(filename)->None:#change all keys
     write(filename,**get(filename))
 

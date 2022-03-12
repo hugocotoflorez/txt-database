@@ -1,5 +1,6 @@
 import database_manager as dbm
 import time,os,sys
+from database_manager import clear
 
 #set variables
 datafile = 'data.txt'
@@ -19,14 +20,17 @@ def check_UP(data,user,password):
 
 
 def login():
+    clear()
     for timeout in range(100):
         #get user
         user = input('User: ')
-        if not user in users: print('[!] Unfound user, retry.');continue
+        pas =1
+        if not user in users: print('[!] Unfound user.\nDo you want to sign up? (Y/n): ',end='');pas = signup(user);
+        if not pas:continue
         #get password
         for a in range(3):
-            password = input('Password (".." to go back): ')
-            if password == '..':break
+            password = input('Password ("." to go back): ') if not pas or pas ==1 else pas
+            if password == '.':break
             else:
                 cup =  check_UP(data,user,password)
                 if cup[0]:return(data[user],user)
@@ -37,59 +41,121 @@ def login():
 
     else:
         while True:
-            input('|$|~PERMABAN~|$|')
+            try:input('|$|~PERMABAN~|$|')
+            except:pass
+
+
+def signup(username):
+    global users, data
+    if input('') in ('y','Y','Yes','YES','yes'):
+        print('Create a password for ',username,':',sep='',end='')
+        pw = input()
+        pw2 = input('Retype the password, please: ')
+        if pw == pw2: 
+            data.update({username:{'password':pw}})
+            users.append(username)
+            dbm.add(datafile,username,**{'password':pw})
+            return pw
+        else:print('[!] Passwords dont match. \nDo you want to retry? (Y/n): ',end='');return signup(username)
+    else: return 0
+        
 
 
 def access(*args):
     global data
     udata,user = args
-    os.system('clear' if sys.platform == 'Win' else 'cls')
     print('Wellcome ',user,'!',sep='')
     while True:
-        i = input('''
+        clear()
+        i = input('.'*30+'''
     [1]: View data.
     [2]: Add/edit data.
     [3]: Delete data.
-    [4]: Change password.
+    [4]: Personal info.
     [5]: Delete user.
-    [.]: Log out
-    \n>> ''')
+    [.]: Log out\n'''
+    +'.'*30+'\n[>]: ')
 
         if not i in '12345.':print('Invalid entry. Please retry.');continue
 
         elif i == '1':
+            clear()
             print('My data:\n'+'.'*30)
             print('\n'.join([f'{a}: {b}' for a,b in udata.items() if a!='password']))
             input('.'*30+'\nPress any key to return.')
 
         elif i == '2':
+            clear()
             print('Add data:\n'+'.'*30)
             to_add = {}
             while True:
-                key = input('Key (".." to return): ')
+                key = input('Key ("." to return): ')
                 if not key:print('invalid key');continue
-                elif key == '..':break
-                args = input(f'Args for {key}: ')
+                elif key == '.':break
+                args = input('Args for {}: '.format(key))
                 if not args:print('invalid args');continue
                 to_add.update({key:args})
                 data.update({key:args})
                 udata.update({key:args})
-                print(f'({key}: {args}) Successfully added')
+                print('({}: {}) Successfully added'.format(key,args))
             if len(to_add)!=0:dbm.update(datafile,user,**to_add)
             print('.'*30)
 
         elif i == '3':
+            clear()
             print('My data:\n'+'.'*30)
-            print('\n'.join([f'[{ind}] {a}: {b}' for ind,(a,b) in enumerate(udata.items()) if a!='password']))
-            inp = input('.'*30+'\nIndex of the data to delete: ')
-            if not inp in ''.join([str(a) for a in range(len(data))]):print('Unfound index');continue
-
+            print('\n'.join(['[{}] {}: {}'.format(ind,a,b) for ind,(a,b) in enumerate(udata.items()) if a!='password']))
+            print('.'*30)
+            inp = input('Index to delete ("." to return): ')
+            if inp == '.':continue
+            key = [a for a in udata.keys()][int(inp)]
+            if key == 'password':continue
+            del udata[key]  
+            dbm.delete_data(datafile,user,*[key])
+            print('{} deleted successfully.'.format(key))
             
 
+        elif i == '4':
+            clear()
+            print('Personal info:\n'+'.'*30)
+            personalkeys = ('username','name','surname','password','biography','address','link','others')
+            for pk in personalkeys:
+                print('{}: {}'.format(pk,udata.get(pk,'__') \
+                    if not pk  in ('password','username') else user if pk =='username' else '*'*len(udata.get('password',0) if udata.get('password',0) else '__')))
+            inp = input('.'*30+'\n[1]: Edit\n[.]: Return\n[>]: ') 
+            if inp in ('1','.'):
+                if inp == '.':continue
+                else:
+                    while True:
+                        personalkeys = ('name','surname','password','biography','address','link','others')
+                        personaldata = {k:udata.get(k,'__') for k in personalkeys}
+                        clear()
+                        print('Edit personal info:\n'+'.'*30)
+                        print('\n'.join(['[{}] {}: {}'.format(ind,a,b) for ind,(a,b) in enumerate(personaldata.items())]))
+                        print('.'*30)
+                        inp = input('Index to change ("." to return): ')
+                        if inp == '.':break
+                        elif inp not in [str(a) for a in range(len(personalkeys))]:print('Invalid key.');continue
+                        key = [a for a in personaldata.keys()][int(inp)]
+                        narg = input('[{}]: '.format(key))
+                        udata.update({key:narg})
+                        print(udata)
+                    dbm.update(datafile,user,**udata)
+                    continue
+        
+            else:print('[!] Invalid key.')
+    
 
-
-        elif i == '4':pass
-        elif i == '5':pass
+        elif i == '5':
+            for a in range(3):
+                if input('\n[!] Are you sure you want to delete all data?\n This action cant be undone. (Y/n): ') \
+                        in ('y','Y','Yes','YES','yes'): 
+                    if udata.get('password','') == input('Confirm password: '):
+                        del data[user]
+                        dbm.delete_user(datafile,user)
+                        break
+                    else:print('[!] Password dont match.')
+            continue
 
         else:print('going back.');break
 
@@ -98,10 +164,13 @@ def access(*args):
 
 def main():
     while True:
-        try:access(*login())
+        try:  access(*login())
+
         except KeyboardInterrupt: 
-            if input('\nAre you sure you want to go out? (Y/n): ') \
-                in ('y','Y','Yes','YES','yes'): break
+            try:
+                if input('\nAre you sure you want to go out? (Y/n): ') in ('y','Y','Yes','YES','yes'): break
+            except KeyboardInterrupt: continue
+            
 
 
 
