@@ -131,12 +131,15 @@ def access(*args):
                         personaldata = {k:udata.get(k,'__') for k in personalkeys}
                         clear()
                         print('Edit personal info:\n'+'.'*30)
-                        print('\n'.join(['[{}] {}: {}'.format(ind,a,b) for ind,(a,b) in enumerate(personaldata.items())]))
+                        print('\n'.join(['[{}] {}: {}'.format(ind,a,b if a!= 'password' else '*'*len(b)) for ind,(a,b) in enumerate(personaldata.items())]))
                         print('.'*30)
                         inp = input('Index to change ("." to return): ')
                         if inp == '.':break
                         elif inp not in [str(a) for a in range(len(personalkeys))]:print('Invalid key.');continue
                         key = [a for a in personaldata.keys()][int(inp)]
+                        if key == 'password':
+                            if udata.get('password','') == input('Confirm password: '):udata.update({'password':input('New password: ')});continue
+                            else:print('[!] Password dont match.');continue
                         narg = input('[{}]: '.format(key))
                         udata.update({key:narg})
                         print(udata)
