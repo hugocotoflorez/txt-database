@@ -1,7 +1,7 @@
 # txt-database
 Creator: @hugoocf
 
-module file: database_manager.py
+install module throw: pip install txt-database-maanger
 
 example file: mydatabase.py
 
@@ -32,3 +32,6 @@ delete all data from a user key
 
 ## ~reconfig(filename)->None
 change all encrypt keys
+
+## ~clear()
+clear the terminal

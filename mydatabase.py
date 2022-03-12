@@ -1,5 +1,5 @@
 import database_manager as dbm
-import time,os,sys
+import time
 from database_manager import clear
 
 #set variables
