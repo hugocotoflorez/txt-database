@@ -150,17 +150,17 @@ def access(*args):
     
 
         elif i == '5':
-            for a in range(3):
-                if input('\n[!] Are you sure you want to delete all data?\n This action cant be undone. (Y/n): ') \
-                        in ('y','Y','Yes','YES','yes'): 
-                    if udata.get('password','') == input('Confirm password: '):
-                        del data[user]
-                        dbm.delete_user(datafile,user)
-                        break
-                    else:print('[!] Password dont match.')
-            continue
+            if input('\n[!] Are you sure you want to delete all data?\n This action cant be undone. (Y/n): ') \
+                    in ('y','Y','Yes','YES','yes'): 
+                if udata.get('password','') == input('Confirm password: '):
+                    del data[user]
+                    dbm.delete_user(datafile,user)
+                    break
+                else:print('[!] Password dont match.')
 
-        else:print('going back.');break
+            else:print('going back.');break
+
+
 
         
 
