@@ -1,7 +1,7 @@
 # txt-database
 Creator: @hugoocf
 
-install module throw: pip install txt-database-maanger
+install module throw: pip install txt-database-manager
 
 example file: mydatabase.py
 
