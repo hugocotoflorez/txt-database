@@ -1,5 +1,4 @@
 # txt-database
-Creator: @hugoocf
 
 install module throw: pip install txt-database-manager
 
